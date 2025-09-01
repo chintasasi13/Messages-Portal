@@ -1,3 +1,5 @@
+const API_BASE = "https://messages-portal.onrender.com";
+
 const form = document.getElementById("messageForm");
 const responseMessage = document.getElementById("responseMessage");
 const messagesList = document.getElementById("messagesList");
@@ -22,7 +24,6 @@ function renderMessages(messages) {
 async function loadMessages() {
   try {
     //const res = await fetch("http://localhost:5001/messages");
-    const API_BASE = "https://messages-portal.onrender.com";
     const res = await fetch(`${API_BASE}/messages`);
     const data = await res.json();
     renderMessages(data);
