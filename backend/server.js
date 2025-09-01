@@ -7,20 +7,11 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const dataFile = path.join(process.cwd(), "messages.json");
 
-// middleware
-app.use(cors());
+// Middleware
+app.use(cors()); // allow requests from anywhere (you can restrict to your GitHub Pages later)
 app.use(express.json());
 
-// Serve static files from frontend folder
-app.use(express.static(path.join(process.cwd(), "frontend")));
-
-// Send index.html for root route
-app.get("/", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "frontend", "index.html"));
-});
-
-
-// load messages
+// Helper: Load messages
 function loadMessages() {
   if (!fs.existsSync(dataFile)) {
     fs.writeFileSync(dataFile, "[]"); // create empty file if missing
@@ -29,34 +20,44 @@ function loadMessages() {
   return JSON.parse(data || "[]");
 }
 
-// save messages
+// Helper: Save messages
 function saveMessages(messages) {
   fs.writeFileSync(dataFile, JSON.stringify(messages, null, 2));
 }
 
 // GET all messages
 app.get("/messages", (req, res) => {
-  res.json(loadMessages());
+  try {
+    const messages = loadMessages();
+    res.json(messages);
+  } catch (err) {
+    console.error("❌ Error in GET /messages:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // POST a new message
 app.post("/messages", (req, res) => {
   try {
-    console.log("📩 Incoming body:", req.body); // debug
+    const { name, email, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
 
     const messages = loadMessages();
-
     const newMessage = {
       id: messages.length + 1,
-      name: req.body.name,
-      email: req.body.email,
-      message: req.body.message,
+      name,
+      email,
+      message,
       date: new Date().toISOString(),
     };
 
     messages.push(newMessage);
     saveMessages(messages);
 
+    console.log("📩 New message saved:", newMessage);
     res.status(201).json(newMessage);
   } catch (err) {
     console.error("❌ Error in POST /messages:", err);
@@ -64,6 +65,12 @@ app.post("/messages", (req, res) => {
   }
 });
 
+// Optional: simple root route for testing
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
+});
+
+// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend running at http://localhost:${PORT}`);
 });
