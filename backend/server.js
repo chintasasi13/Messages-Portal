@@ -7,6 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const dataFile = path.join(process.cwd(), "messages.json");
 
+// Serve static files from frontend folder
+app.use(express.static(path.join(process.cwd(), "frontend")));
+
+// Send index.html for root route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "frontend", "index.html"));
+});
+
 // middleware
 app.use(cors());
 app.use(express.json());
